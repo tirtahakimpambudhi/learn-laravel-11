@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
@@ -48,19 +50,26 @@ class DemoSession extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $id = Str::uuid()->toString();
-        $rules = [
-            'name' => 'required|string|max:255',
-            'age' => 'required|integer|between:1,100',
-        ];
-        $data = $request->validate($rules);
-        $request->session()->put($id, $data);
-        return response()->json(data: [
-           'status' => ResponseAlias::HTTP_CREATED,
-           'code' => 'STATUS_CREATED',
-           'data' => $request->session()->get($id)
-        ]);
+        try {
+            $id = Str::uuid()->toString();
+            $rules = [
+                'name' => 'required|string|max:255',
+                'age' => 'required|integer|between:1,100',
+            ];
+            $data = $request->validate($rules);
+            $request->session()->put($id, $data);
+            return response()->json(data: [
+                'status' => ResponseAlias::HTTP_CREATED,
+                'code' => 'STATUS_CREATED',
+                'data' => $request->session()->get($id)
+            ]);
+        } catch (ValidationException $exception) {
+            throw new HttpResponseException(response: response(content: $exception->errors(), status: 422));
+        } catch (\Exception $exception) {
+            throw new HttpResponseException(response: response(content: $exception->getMessage(), status: 500));
+        }
     }
+
 
     /**
      * Display the specified resource.
