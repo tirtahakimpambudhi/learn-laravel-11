@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\CustomException;
 use App\Http\Middleware\DemoMiddleware;
 use App\Http\Middleware\DemoMiddlewareParameter;
 use Illuminate\Foundation\Application;
@@ -25,4 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
+        $exceptions->report(function (CustomException $e) {
+            var_dump($e->getMessage());
+        })->stop();
     })->create();
