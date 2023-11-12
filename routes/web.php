@@ -1,9 +1,11 @@
 <?php
 
 use App\Demos\Contracts\Example;
+use App\Exceptions\CustomException;
 use App\Http\Controllers\DemoController;
-use App\Http\Middleware\DemoMiddleware;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use App\Http\Middleware\DemoMiddlewareParameter;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
@@ -49,6 +51,7 @@ $this->router->controller(DemoController::class)->prefix('/example/controller')-
 $this->router->get('/example/uuid/{id}',function (string $id){
     return "UserId: '$id'";
 })->whereUuid('id')->name('example.uuid');
+
 
 $this->router->get('/example/ulid/{id}',function (string $id){
     return "UserId: '$id'";
@@ -96,11 +99,23 @@ $this->router->prefix('/example-url')->name('example.url.')->group(function () {
 
 });
 
-
 $this->router->get('/providers', function () {
     $exampleSingleton = App::make(Example::class);
     $exampleSingleton->example();
 })->name('example.providers');
+
+$this->router->get('/report', function () {
+    try {
+        throw new CustomException("Something went wrong", 500);
+    } catch (\Exception $e) {
+        report($e);
+        throw new HttpResponseException($e->getMessage(), $e->getCode());
+    }
+});
+
+$this->router->get('/error/{code}', function (int $code, Request $request) {
+    $code == 400 ? abort(400, 'Bad Request') : abort(500, 'Something went wrong');
+});
 
 $this->router->fallback(function () {
     return "404 Not Found";
