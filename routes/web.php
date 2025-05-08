@@ -2,13 +2,17 @@
 
 use App\Demos\Contracts\Example;
 use App\Exceptions\CustomException;
+use App\Http\Controllers\BladeController;
 use App\Http\Controllers\DemoController;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use App\Http\Middleware\DemoMiddlewareParameter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
+use Illuminate\View\View;
 
 Route::get('/', function () {
     return view('welcome');
@@ -72,6 +76,7 @@ $this->router->view('/example-view','index',[
 ])->name('example.view');
 
 $this->router->get('/example-get', function () {
+    Log::info('Test the log info');
     return 'Hello World';
 })->name('example.get');
 
@@ -111,6 +116,21 @@ $this->router->get('/report', function () {
         report($e);
         throw new HttpResponseException($e->getMessage(), $e->getCode());
     }
+});
+
+$this->router->controller(BladeController::class)->prefix('/example/blade')->name('example.blade.')->group(function () {
+
+    $this->router->get('/xss', 'htmlEncoding')->name('xss');
+
+    $this->router->get('/disable', 'disableBladeSyntax')->name('disable');
+
+    $this->router->get('/conditional-statement', 'conditionStatement')->name('condition-statement');
+
+    $this->router->get('/class-conditional', 'classCondition')->name('class-condition');
+
+    $this->router->get('/loop-statement', 'loopStatement')->name('loop-statement');
+
+    $this->router->get('/render-json', 'passValueToJS')->name('render-json');
 });
 
 $this->router->get('/error/{code}', function (int $code, Request $request) {
